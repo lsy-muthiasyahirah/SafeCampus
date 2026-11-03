@@ -29,3 +29,48 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+
+/* Custom Palet Warna Login & Register */
+body {
+    background-color: #FFF8F0 !important;
+    color: #3B2A20 !important;
+}
+
+.card-custom {
+    border: none;
+    border-top: 5px solid #5C3D2E;
+    border-radius: 12px;
+    background-color: #ffffff;
+}
+
+.text-primer {
+    color: #5C3D2E;
+}
+
+.btn-aksen {
+    background-color: #F28C28;
+    color: white;
+    font-weight: bold;
+    border: none;
+}
+
+    .btn-aksen:hover {
+        background-color: #E76F51;
+        color: white;
+    }
+
+.link-custom {
+    color: #E76F51;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+    .link-custom:hover {
+        color: #F28C28;
+    }
+
+.form-control:focus {
+    border-color: #FFD6A5;
+    box-shadow: 0 0 0 0.25rem rgba(242, 140, 40, 0.25);
+}
