@@ -1,0 +1,249 @@
+﻿@{
+    ViewData["Title"] = "Tanggapan";
+}
+
+<style>
+    .tanggapan-page {
+        min-height: 80vh;
+        padding: 35px 20px;
+        background: #FFF8F0;
+    }
+
+    .tanggapan-container {
+        max-width: 750px;
+        margin: 0 auto;
+    }
+
+    .back-link {
+        display: inline-block;
+        margin-bottom: 25px;
+        color: #5C3D2E;
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 500;
+    }
+
+        .back-link:hover {
+            color: #E76F51;
+        }
+
+    .tanggapan-card {
+        background: #FFFFFF;
+        border: 1px solid #E9DCD1;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px rgba(92, 61, 46, 0.06);
+    }
+
+    .tanggapan-header {
+        padding: 30px;
+        background: #FFF8F0;
+        border-bottom: 1px solid #E9DCD1;
+    }
+
+        .tanggapan-header h2 {
+            color: #5C3D2E;
+            margin: 0 0 12px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .tanggapan-header p {
+            color: #80685B;
+            margin: 0;
+            line-height: 1.7;
+            font-size: 15px;
+        }
+
+    .tanggapan-body {
+        padding: 30px;
+    }
+
+    .label-tanggapan {
+        display: block;
+        color: #5C3D2E;
+        font-weight: 600;
+        margin-bottom: 12px;
+        font-size: 15px;
+    }
+
+    .textarea-tanggapan {
+        width: 100%;
+        min-height: 220px;
+        box-sizing: border-box;
+        padding: 18px;
+        border: 1px solid #E9DCD1;
+        border-radius: 12px;
+        font-family: inherit;
+        font-size: 15px;
+        color: #3B2A20;
+        background: #FFFFFF;
+        resize: vertical;
+        outline: none;
+        transition: 0.2s;
+    }
+
+        .textarea-tanggapan:focus {
+            border-color: #F28C28;
+            box-shadow: 0 0 0 3px rgba(242, 140, 40, 0.12);
+        }
+
+        .textarea-tanggapan::placeholder {
+            color: #B5A49A;
+        }
+
+    .form-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 25px;
+        flex-wrap: wrap;
+    }
+
+    .btn-batal {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 24px;
+        border: 1px solid #E9DCD1;
+        border-radius: 10px;
+        background: #FFFFFF;
+        color: #5C3D2E;
+        text-decoration: none;
+        font-weight: 500;
+        transition: 0.2s;
+    }
+
+        .btn-batal:hover {
+            background: #FFF8F0;
+            color: #5C3D2E;
+        }
+
+    .btn-kirim {
+        padding: 12px 25px;
+        border: none;
+        border-radius: 10px;
+        background: #F28C28;
+        color: #FFFFFF;
+        font-family: inherit;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+        .btn-kirim:hover {
+            background: #E76F51;
+            transform: translateY(-1px);
+        }
+
+    .error-message {
+        padding: 12px 15px;
+        background: #FFF1E2;
+        color: #B84D32;
+        border-radius: 10px;
+        margin-bottom: 20px;
+    }
+
+    @@media (max-width: 600px) {
+        .tanggapan-page {
+            padding: 20px 15px;
+        }
+
+        .tanggapan-header,
+        .tanggapan-body {
+            padding: 22px;
+        }
+
+            .tanggapan-header h2 {
+                font-size: 23px;
+            }
+
+        .form-footer {
+            flex-direction: column-reverse;
+        }
+
+        .btn-batal,
+        .btn-kirim {
+            width: 100%;
+            box-sizing: border-box;
+        }
+    }
+</style>
+
+<div class="tanggapan-page">
+    <div class="tanggapan-container">
+
+        <!-- KEMBALI -->
+        <a asp-controller="Pengaduan"
+           asp-action="Detail"
+           asp-route-id="@ViewBag.IdPengaduan"
+           class="back-link">
+            ← Kembali ke Detail Pengaduan
+        </a>
+
+        <!-- CARD TANGGAPAN -->
+        <div class="tanggapan-card">
+
+            <!-- HEADER -->
+            <div class="tanggapan-header">
+                <h2>Tanggapan Pengaduan</h2>
+
+                <p>
+                    Sampaikan tanggapan atau informasi tambahan
+                    mengenai pengaduanmu kepada admin SafeCampus.
+                </p>
+            </div>
+
+            <!-- FORM -->
+            <div class="tanggapan-body">
+
+                @if (TempData["Error"] != null)
+                {
+                    <div class="error-message">
+                        @TempData["Error"]
+                    </div>
+                }
+
+                <form method="post"
+                      asp-controller="Pengaduan"
+                      asp-action="KirimTanggapan">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           name="idPengaduan"
+                           value="@ViewBag.IdPengaduan" />
+
+                    <label class="label-tanggapan">
+                        Isi Tanggapan
+                    </label>
+
+                    <textarea name="isiTanggapan"
+                              class="textarea-tanggapan"
+                              required
+                              maxlength="2000"
+                              placeholder="Tuliskan tanggapanmu di sini..."></textarea>
+
+                    <div class="form-footer">
+
+                        <a asp-controller="Pengaduan"
+                           asp-action="Detail"
+                           asp-route-id="@ViewBag.IdPengaduan"
+                           class="btn-batal">
+                            Batal
+                        </a>
+
+                        <button type="submit"
+                                class="btn-kirim">
+                            Kirim Tanggapan →
+                        </button>
+
+                    </div>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
