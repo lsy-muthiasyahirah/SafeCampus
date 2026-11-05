@@ -1,0 +1,78 @@
+﻿@model SafeCampus.ViewModels.RiwayatPengaduanViewModel
+@using SafeCampus.Models
+@{
+    ViewData["Title"] = "Riwayat Pengaduan";
+}
+
+<div class="container" style="max-width: 860px;">
+    <div class="sc-header d-flex justify-content-between align-items-end flex-wrap gap-2">
+        <div>
+            <h1>Riwayat Pengaduan</h1>
+            <p>@Model.TotalData pengaduan tercatat atas namamu.</p>
+        </div>
+        <a asp-action="Buat" class="btn btn-sc">+ Buat Pengaduan Baru</a>
+    </div>
+
+    @if (TempData["Sukses"] is string sukses)
+    {
+        <div class="sc-alert-sukses">@sukses</div>
+    }
+
+    <form method="get" class="d-flex align-items-center gap-2 mb-3">
+        <label for="status" class="form-label mb-0">Status</label>
+        <select id="status" name="status" class="form-select" style="max-width: 260px;" onchange="this.form.submit()">
+            <option value="">Semua status</option>
+            @foreach (var s in Enum.GetValues<StatusLaporan>())
+            {
+                <option value="@s" selected="@(Model.FilterStatus == s)">@s.Label()</option>
+            }
+        </select>
+    </form>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="sc-card sc-kosong">
+            <p class="mb-3">Belum ada pengaduan@(Model.FilterStatus.HasValue ? " dengan status ini" : "").</p>
+            <a asp-action="Buat" class="btn btn-sc-outline">Buat pengaduan pertama</a>
+        </div>
+    }
+    else
+    {
+        foreach (var item in Model.Items)
+        {
+            <a asp-action="Detail" asp-route-id="@item.IdPengaduan" class="sc-item">
+                <div>
+                    <div class="sc-item-judul">Pengaduan #@item.IdPengaduan &middot; @item.NamaKategori</div>
+                    <div class="sc-item-meta">
+                        @item.LokasiKejadian &middot; Kejadian @item.TanggalKejadian.ToString("dd MMM yyyy")
+                        &middot; Dikirim @item.TanggalPengaduan.ToString("dd MMM yyyy, HH:mm")
+                        @if (item.JumlahBukti > 0)
+                        {
+                            <span>&middot; @item.JumlahBukti bukti</span>
+                        }
+                    </div>
+                </div>
+                <span class="@item.Status.CssClass()">@item.Status.Label()</span>
+            </a>
+        }
+
+        if (Model.TotalHalaman > 1)
+        {
+            <nav aria-label="Halaman riwayat">
+                <ul class="pagination justify-content-center mt-4">
+                    @for (var i = 1; i <= Model.TotalHalaman; i++)
+                    {
+                        <li class="page-item @(i == Model.Halaman ? "active" : "")">
+                            <a class="page-link" asp-action="Riwayat"
+                               asp-route-halaman="@i" asp-route-status="@Model.FilterStatus">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    }
+</div>@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
