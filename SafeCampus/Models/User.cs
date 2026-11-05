@@ -15,9 +15,32 @@ public class User
     [Column("password"), MaxLength(255)] public string Password { get; set; } = string.Empty;
     [Column("role"), MaxLength(20)] public string Role { get; set; } = "mahasiswa";
 }
+using System.ComponentModel.DataAnnotations.Schema; // Tambahkan ini
+
 namespace SafeCampus.Models
 {
     public class User
     {
+        [Key]
+        public int Id { get; set; }
+
+        [Required]
+        public string Nama { get; set; }
+
+        [Required]
+        public string NPM { get; set; }
+
+        [Required]
+        public string Email { get; set; }
+
+        [Required]
+        public string Password { get; set; }
+
+        // --- TAMBAHKAN DUA BARIS INI (FOREIGN KEY) ---
+        [Required]
+        public int JurusanId { get; set; }
+
+        [ForeignKey("JurusanId")]
+        public Jurusan Jurusan { get; set; }
     }
 }
