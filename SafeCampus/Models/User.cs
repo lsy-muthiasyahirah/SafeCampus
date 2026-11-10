@@ -1,45 +1,38 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SafeCampus.Models;
 
-// SEMENTARA: file ini MILIK MUTI (modul autentikasi).
-// Hapus file ini dan pakai versi Muti begitu sudah di-push.
 [Table("users")]
 public class User
 {
-    [Key, Column("id_user")] public int IdUser { get; set; }
-    [Column("nama"), MaxLength(100)] public string Nama { get; set; } = string.Empty;
-    [Column("npm"), MaxLength(20)] public string Npm { get; set; } = string.Empty;
-    [Column("email"), MaxLength(100)] public string Email { get; set; } = string.Empty;
-    [Column("password"), MaxLength(255)] public string Password { get; set; } = string.Empty;
-    [Column("role"), MaxLength(20)] public string Role { get; set; } = "mahasiswa";
-}
-using System.ComponentModel.DataAnnotations.Schema; // Tambahkan ini
+    [Key, Column("id_user")]
+    public int IdUser { get; set; }
 
-namespace SafeCampus.Models
-{
-    public class User
-    {
-        [Key]
-        public int Id { get; set; }
+    [Column("nama"), MaxLength(100), Required]
+    public string Nama { get; set; } = string.Empty;
 
-        [Required]
-        public string Nama { get; set; }
+    // NPM dipakai sebagai username login mahasiswa
+    [Column("npm"), MaxLength(20)]
+    public string Npm { get; set; } = string.Empty;
 
-        [Required]
-        public string NPM { get; set; }
+    [Column("email"), MaxLength(100)]
+    public string Email { get; set; } = string.Empty;
 
-        [Required]
-        public string Email { get; set; }
+    [Column("password"), MaxLength(255), Required]
+    public string Password { get; set; } = string.Empty;
 
-        [Required]
-        public string Password { get; set; }
+    // "mahasiswa" atau "admin"
+    [Column("role"), MaxLength(20)]
+    public string Role { get; set; } = "mahasiswa";
 
-        [Required]
-        public int JurusanId { get; set; }
+    // FK ke Jurusan (nullable — admin tidak perlu jurusan)
+    [Column("jurusan_id")]
+    public int? JurusanId { get; set; }
 
-        [ForeignKey("JurusanId")]
-        public Jurusan Jurusan { get; set; }
-    }
+    [ForeignKey(nameof(JurusanId))]
+    public Jurusan? Jurusan { get; set; }
+
+    // Navigasi balik
+    public List<Pengaduan> Pengaduan { get; set; } = new();
 }

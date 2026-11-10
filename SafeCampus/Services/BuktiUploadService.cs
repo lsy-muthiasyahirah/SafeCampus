@@ -1,25 +1,19 @@
-﻿namespace SafeCampus.Services
-{
-    public class BuktiUploadService
-    {
-    }
-}
 using SafeCampus.Models;
 
 namespace SafeCampus.Services;
 
 public class BuktiUploadService : IFileUploadService
 {
-    public const int MaksFile = 5;
-    public const long MaksUkuranByte = 5 * 1024 * 1024; // 5 MB
+    public const int  MaksFile        = 5;
+    public const long MaksUkuranByte  = 5 * 1024 * 1024; // 5 MB
 
     // Ekstensi yang diizinkan + tanda awal (magic bytes) isi file yang sebenarnya
     private static readonly Dictionary<string, (byte[] Signature, string ContentType)> Diizinkan = new()
     {
-        [".jpg"] = (new byte[] { 0xFF, 0xD8, 0xFF }, "image/jpeg"),
-        [".jpeg"] = (new byte[] { 0xFF, 0xD8, 0xFF }, "image/jpeg"),
-        [".png"] = (new byte[] { 0x89, 0x50, 0x4E, 0x47 }, "image/png"),
-        [".pdf"] = (new byte[] { 0x25, 0x50, 0x44, 0x46 }, "application/pdf"),
+        [".jpg"]  = (new byte[] { 0xFF, 0xD8, 0xFF },             "image/jpeg"),
+        [".jpeg"] = (new byte[] { 0xFF, 0xD8, 0xFF },             "image/jpeg"),
+        [".png"]  = (new byte[] { 0x89, 0x50, 0x4E, 0x47 },      "image/png"),
+        [".pdf"]  = (new byte[] { 0x25, 0x50, 0x44, 0x46 },      "application/pdf"),
     };
 
     private readonly string _folder;
@@ -71,7 +65,7 @@ public class BuktiUploadService : IFileUploadService
         {
             foreach (var f in files)
             {
-                var ext = Path.GetExtension(f.FileName).ToLowerInvariant();
+                var ext          = Path.GetExtension(f.FileName).ToLowerInvariant();
                 var namaTersimpan = Guid.NewGuid().ToString("N") + ext;
 
                 await using (var fs = new FileStream(Path.Combine(_folder, namaTersimpan), FileMode.CreateNew))

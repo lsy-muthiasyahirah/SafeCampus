@@ -1,69 +1,173 @@
-﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using SafeCampus.Data;
 using SafeCampus.Models;
 using SafeCampus.Services;
-using SafeCampus.ViewModels;
+using System.Security.Claims;
 
 namespace SafeCampus.Controllers;
 
+[Authorize]
 public class PengaduanController : Controller
 {
     private const int UkuranHalaman = 8;
 
-    private readonly AppDbContext _db;
-    private readonly IFileUploadService _upload;
-    private readonly IWebHostEnvironment _env;
-    private readonly IConfiguration _config;
+    private readonly ApplicationDbContext  _db;
+    private readonly IFileUploadService    _upload;
+    private readonly IWebHostEnvironment   _env;
     private readonly ILogger<PengaduanController> _logger;
 
-    public PengaduanController(AppDbContext db, IFileUploadService upload,
-        IWebHostEnvironment env, IConfiguration config, ILogger<PengaduanController> logger)
+    public PengaduanController(
+        ApplicationDbContext db,
+        IFileUploadService upload,
+        IWebHostEnvironment env,
+        ILogger<PengaduanController> logger)
     {
-        _db = db;
+        _db     = db;
         _upload = upload;
-        _env = env;
-        _config = config;
+        _env    = env;
         _logger = logger;
     }
 
-    // Id user diambil dari claim yang dibuat modul login (Muti).
-    // Saat Development dan login belum jadi, boleh pakai "Dev:UserId" di appsettings.Development.json.
-    private int? AmbilIdUser()
+    // Ambil IdUser dari claim cookie
+    private int AmbilIdUser()
     {
         var klaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (int.TryParse(klaim, out var id)) return id;
-
-        if (_env.IsDevelopment() && int.TryParse(_config["Dev:UserId"], out var devId))
-            return devId;
-
-        return null;
+        return int.TryParse(klaim, out var id) ? id : 0;
     }
 
-    private bool IsAdmin => User.IsInRole("Admin");
+    private bool IsAdmin => User.IsInRole("admin");
 
-    // ---------- BUAT PENGADUAN ----------
+    // ============================================================
+    //  INDEX — Daftar semua pengaduan (admin) / redirect (mahasiswa)
+    // ============================================================
+
+    [HttpGet]
+    public async Task<IActionResult> Index(StatusLaporan? status, int halaman = 1)
+    {
+        if (!IsAdmin)
+            return RedirectToAction(nameof(Riwayat));
+
+        var query = _db.Pengaduan
+            .AsNoTracking()
+            .Include(p => p.Kategori)
+            .Include(p => p.Pelapor)
+            .AsQueryable();
+
+        if (status.HasValue)
+            query = query.Where(p => p.Status == status.Value);
+
+        var total        = await query.CountAsync();
+        var totalHalaman = Math.Max(1, (int)Math.Ceiling(total / (double)UkuranHalaman));
+        halaman          = Math.Clamp(halaman, 1, totalHalaman);
+
+        var items = await query
+            .OrderByDescending(p => p.TanggalPengaduan)
+            .Skip((halaman - 1) * UkuranHalaman)
+            .Take(UkuranHalaman)
+            .Select(p => new AdminDashboardItem
+            {
+                IdPengaduan      = p.IdPengaduan,
+                NamaPelapor      = p.Pelapor != null ? p.Pelapor.Nama : "-",
+                NamaKategori     = p.Kategori != null ? p.Kategori.NamaKategori : "-",
+                LokasiKejadian   = p.LokasiKejadian,
+                TanggalPengaduan = p.TanggalPengaduan,
+                Status           = p.Status
+            })
+            .ToListAsync();
+
+        // Statistik
+        var semuaPengaduan = _db.Pengaduan.AsNoTracking();
+        var vm = new AdminDashboardViewModel
+        {
+            Items        = items,
+            FilterStatus = status,
+            Halaman      = halaman,
+            TotalHalaman = totalHalaman,
+            TotalData    = total,
+            JumlahTotal    = await semuaPengaduan.CountAsync(),
+            JumlahMenunggu = await semuaPengaduan.CountAsync(p => p.Status == StatusLaporan.MenungguValidasi),
+            JumlahDiproses = await semuaPengaduan.CountAsync(p => p.Status == StatusLaporan.Diproses),
+            JumlahSelesai  = await semuaPengaduan.CountAsync(p => p.Status == StatusLaporan.Selesai),
+        };
+
+        return View(vm);
+    }
+
+    // ============================================================
+    //  RIWAYAT — daftar pengaduan milik mahasiswa yang login
+    // ============================================================
+
+    [HttpGet]
+    public async Task<IActionResult> Riwayat(StatusLaporan? status, int halaman = 1)
+    {
+        var idUser = AmbilIdUser();
+
+        // Admin dialihkan ke Index
+        if (IsAdmin)
+            return RedirectToAction(nameof(Index));
+
+        var query = _db.Pengaduan
+            .AsNoTracking()
+            .Where(p => p.IdPelapor == idUser);
+
+        if (status.HasValue)
+            query = query.Where(p => p.Status == status.Value);
+
+        var total        = await query.CountAsync();
+        var totalHalaman = Math.Max(1, (int)Math.Ceiling(total / (double)UkuranHalaman));
+        halaman          = Math.Clamp(halaman, 1, totalHalaman);
+
+        var items = await query
+            .OrderByDescending(p => p.TanggalPengaduan)
+            .Skip((halaman - 1) * UkuranHalaman)
+            .Take(UkuranHalaman)
+            .Select(p => new RiwayatItem
+            {
+                IdPengaduan      = p.IdPengaduan,
+                NamaKategori     = p.Kategori != null ? p.Kategori.NamaKategori : "-",
+                LokasiKejadian   = p.LokasiKejadian,
+                TanggalKejadian  = p.TanggalKejadian,
+                TanggalPengaduan = p.TanggalPengaduan,
+                Status           = p.Status,
+                JumlahBukti      = p.DaftarBukti.Count
+            })
+            .ToListAsync();
+
+        return View(new RiwayatPengaduanViewModel
+        {
+            Items        = items,
+            FilterStatus = status,
+            Halaman      = halaman,
+            TotalHalaman = totalHalaman,
+            TotalData    = total
+        });
+    }
+
+    // ============================================================
+    //  BUAT PENGADUAN
+    // ============================================================
 
     [HttpGet]
     public async Task<IActionResult> Buat()
     {
-        var idUser = AmbilIdUser();
-        if (idUser is null) return RedirectToAction("Login", "Account");
+        if (IsAdmin)
+            return RedirectToAction(nameof(Index));
 
         var vm = new BuatPengaduanViewModel();
-        await IsiDataTampilan(vm, idUser.Value);
+        await IsiDataTampilan(vm, AmbilIdUser());
         return View(vm);
     }
 
     [HttpPost, ValidateAntiForgeryToken, RequestSizeLimit(30_000_000)]
     public async Task<IActionResult> Buat(BuatPengaduanViewModel vm)
     {
-        var idUser = AmbilIdUser();
-        if (idUser is null) return RedirectToAction("Login", "Account");
+        if (IsAdmin)
+            return RedirectToAction(nameof(Index));
 
-        var files = vm.Bukti?.Where(f => f.Length > 0).ToList() ?? new List<IFormFile>();
+        var idUser = AmbilIdUser();
+        var files  = vm.Bukti?.Where(f => f.Length > 0).ToList() ?? new List<IFormFile>();
 
         foreach (var pesan in await _upload.ValidasiAsync(files))
             ModelState.AddModelError(nameof(BuatPengaduanViewModel.Bukti), pesan);
@@ -73,7 +177,7 @@ public class PengaduanController : Controller
 
         if (!ModelState.IsValid)
         {
-            await IsiDataTampilan(vm, idUser.Value);
+            await IsiDataTampilan(vm, idUser);
             return View(vm);
         }
 
@@ -84,16 +188,24 @@ public class PengaduanController : Controller
 
             var pengaduan = new Pengaduan
             {
-                IdPelapor = idUser.Value,
-                IdKategori = vm.IdKategori!.Value,
-                NamaKorban = vm.NamaKorban.Trim(),
-                NpmKorban = vm.NpmKorban.Trim(),
-                TanggalKejadian = vm.TanggalKejadian!.Value.Date,
+                IdPelapor        = idUser,
+                IdKategori       = vm.IdKategori!.Value,
+                NamaKorban       = vm.NamaKorban.Trim(),
+                NpmKorban        = vm.NpmKorban.Trim(),
+                TanggalKejadian  = vm.TanggalKejadian!.Value.Date,
                 TanggalPengaduan = DateTime.Now,
-                LokasiKejadian = vm.LokasiKejadian.Trim(),
-                Deskripsi = vm.Deskripsi.Trim(),
-                DaftarBukti = bukti
+                LokasiKejadian   = vm.LokasiKejadian.Trim(),
+                Deskripsi        = vm.Deskripsi.Trim(),
+                DaftarBukti      = bukti
             };
+
+            // Catat riwayat status awal
+            pengaduan.DaftarRiwayat.Add(new RiwayatStatus
+            {
+                StatusSesudahnya = StatusLaporan.MenungguValidasi.ToString(),
+                DiubahOleh       = User.FindFirstValue(ClaimTypes.Name) ?? "Sistem",
+                Keterangan       = "Pengaduan berhasil dikirim dan menunggu penanganan."
+            });
 
             _db.Pengaduan.Add(pengaduan);
             await _db.SaveChangesAsync();
@@ -104,88 +216,154 @@ public class PengaduanController : Controller
         catch (Exception ex)
         {
             _logger.LogError(ex, "Gagal menyimpan pengaduan");
-            _upload.Hapus(bukti.Select(b => b.PathFile)); // jangan tinggalkan file yatim
+            _upload.Hapus(bukti.Select(b => b.PathFile));
             ModelState.AddModelError(string.Empty, "Pengaduan gagal disimpan. Silakan coba lagi.");
-            await IsiDataTampilan(vm, idUser.Value);
+            await IsiDataTampilan(vm, idUser);
             return View(vm);
         }
     }
 
-    // ---------- RIWAYAT ----------
-
-    [HttpGet]
-    public async Task<IActionResult> Riwayat(StatusLaporan? status, int halaman = 1)
-    {
-        var idUser = AmbilIdUser();
-        if (idUser is null) return RedirectToAction("Login", "Account");
-
-        var query = _db.Pengaduan.AsNoTracking().Where(p => p.IdPelapor == idUser.Value);
-        if (status.HasValue) query = query.Where(p => p.Status == status.Value);
-
-        var total = await query.CountAsync();
-        var totalHalaman = Math.Max(1, (int)Math.Ceiling(total / (double)UkuranHalaman));
-        halaman = Math.Clamp(halaman, 1, totalHalaman);
-
-        var items = await query
-            .OrderByDescending(p => p.TanggalPengaduan)
-            .Skip((halaman - 1) * UkuranHalaman)
-            .Take(UkuranHalaman)
-            .Select(p => new RiwayatItem
-            {
-                IdPengaduan = p.IdPengaduan,
-                NamaKategori = p.Kategori!.NamaKategori,
-                LokasiKejadian = p.LokasiKejadian,
-                TanggalKejadian = p.TanggalKejadian,
-                TanggalPengaduan = p.TanggalPengaduan,
-                Status = p.Status,
-                JumlahBukti = p.DaftarBukti.Count
-            })
-            .ToListAsync();
-
-        return View(new RiwayatPengaduanViewModel
-        {
-            Items = items,
-            FilterStatus = status,
-            Halaman = halaman,
-            TotalHalaman = totalHalaman,
-            TotalData = total
-        });
-    }
-
-    // ---------- DETAIL ----------
+    // ============================================================
+    //  DETAIL PENGADUAN
+    // ============================================================
 
     [HttpGet]
     public async Task<IActionResult> Detail(int id)
     {
         var idUser = AmbilIdUser();
-        if (idUser is null) return RedirectToAction("Login", "Account");
 
-        var pengaduan = await _db.Pengaduan.AsNoTracking()
+        var pengaduan = await _db.Pengaduan
+            .AsNoTracking()
             .Include(p => p.Kategori)
             .Include(p => p.Pelapor)
             .Include(p => p.DaftarBukti)
+            .Include(p => p.DaftarTanggapan)
+                .ThenInclude(t => t.User)
+            .Include(p => p.DaftarRiwayat)
             .FirstOrDefaultAsync(p => p.IdPengaduan == id);
 
-        // NotFound (bukan Forbid) supaya orang lain tidak tahu laporan itu ada
-        if (pengaduan is null || !pengaduan.BisaDilihatOleh(idUser.Value, IsAdmin))
+        // NotFound (bukan Forbid) agar orang lain tidak tahu laporan itu ada
+        if (pengaduan is null || !pengaduan.BisaDilihatOleh(idUser, IsAdmin))
             return NotFound();
 
         return View(pengaduan);
     }
 
-    // ---------- UNDUH / LIHAT BUKTI (dengan cek hak akses) ----------
+    // ============================================================
+    //  UBAH STATUS (admin only)
+    // ============================================================
+
+    [HttpPost, ValidateAntiForgeryToken]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> UbahStatus(int id, StatusLaporan statusBaru, string? keterangan)
+    {
+        var pengaduan = await _db.Pengaduan
+            .Include(p => p.DaftarRiwayat)
+            .FirstOrDefaultAsync(p => p.IdPengaduan == id);
+
+        if (pengaduan is null) return NotFound();
+
+        var statusLama = pengaduan.Status;
+        pengaduan.UbahStatus(statusBaru);
+
+        // Catat riwayat perubahan
+        pengaduan.DaftarRiwayat.Add(new RiwayatStatus
+        {
+            StatusSebelumnya = statusLama.ToString(),
+            StatusSesudahnya = statusBaru.ToString(),
+            DiubahOleh       = User.FindFirstValue(ClaimTypes.Name) ?? "Admin",
+            Keterangan       = keterangan
+        });
+
+        // Kirim notifikasi ke pelapor
+        _db.Notifikasi.Add(new Notifikasi
+        {
+            IdUser    = pengaduan.IdPelapor,
+            IdPengaduan = pengaduan.IdPengaduan,
+            Pesan     = $"Status pengaduan #{pengaduan.IdPengaduan} diubah menjadi: {statusBaru.Label()}"
+        });
+
+        await _db.SaveChangesAsync();
+
+        TempData["Sukses"] = $"Status pengaduan berhasil diubah menjadi \"{statusBaru.Label()}\".";
+        return RedirectToAction(nameof(Detail), new { id });
+    }
+
+    // ============================================================
+    //  KIRIM TANGGAPAN
+    // ============================================================
+
+    [HttpGet]
+    public async Task<IActionResult> Tanggapan(int id)
+    {
+        var idUser = AmbilIdUser();
+        var pengaduan = await _db.Pengaduan.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.IdPengaduan == id);
+
+        if (pengaduan is null || !pengaduan.BisaDilihatOleh(idUser, IsAdmin))
+            return NotFound();
+
+        ViewBag.IdPengaduan = id;
+        return View(new KirimTanggapanViewModel { IdPengaduan = id });
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> KirimTanggapan(KirimTanggapanViewModel vm)
+    {
+        var idUser = AmbilIdUser();
+        var pengaduan = await _db.Pengaduan
+            .FirstOrDefaultAsync(p => p.IdPengaduan == vm.IdPengaduan);
+
+        if (pengaduan is null || !pengaduan.BisaDilihatOleh(idUser, IsAdmin))
+            return NotFound();
+
+        if (!ModelState.IsValid)
+        {
+            ViewBag.IdPengaduan = vm.IdPengaduan;
+            return View("Tanggapan", vm);
+        }
+
+        var tanggapan = new Tanggapan
+        {
+            IdPengaduan     = vm.IdPengaduan,
+            IdUser          = idUser,
+            Pengirim        = IsAdmin ? "admin" : "mahasiswa",
+            IsiTanggapan    = vm.IsiTanggapan.Trim(),
+            TanggalTanggapan = DateTime.Now
+        };
+
+        _db.Tanggapan.Add(tanggapan);
+
+        // Notifikasi ke pihak lain
+        int penerimaNot = IsAdmin ? pengaduan.IdPelapor : 1; // 1 = id admin seed
+        _db.Notifikasi.Add(new Notifikasi
+        {
+            IdUser      = penerimaNot,
+            IdPengaduan = vm.IdPengaduan,
+            Pesan       = $"Tanggapan baru pada pengaduan #{vm.IdPengaduan}."
+        });
+
+        await _db.SaveChangesAsync();
+
+        TempData["Sukses"] = "Tanggapan berhasil dikirim.";
+        return RedirectToAction(nameof(Detail), new { id = vm.IdPengaduan });
+    }
+
+    // ============================================================
+    //  UNDUH / LIHAT BUKTI (dengan cek hak akses)
+    // ============================================================
 
     [HttpGet]
     public async Task<IActionResult> Bukti(int id)
     {
         var idUser = AmbilIdUser();
-        if (idUser is null) return RedirectToAction("Login", "Account");
 
-        var bukti = await _db.BuktiPengaduan.AsNoTracking()
+        var bukti = await _db.BuktiPengaduan
+            .AsNoTracking()
             .Include(b => b.Pengaduan)
             .FirstOrDefaultAsync(b => b.IdBukti == id);
 
-        if (bukti?.Pengaduan is null || !bukti.Pengaduan.BisaDilihatOleh(idUser.Value, IsAdmin))
+        if (bukti?.Pengaduan is null || !bukti.Pengaduan.BisaDilihatOleh(idUser, IsAdmin))
             return NotFound();
 
         var path = _upload.AmbilPathLengkap(bukti.PathFile);
@@ -195,116 +373,24 @@ public class PengaduanController : Controller
         return PhysicalFile(path, _upload.AmbilTipeKonten(bukti.PathFile));
     }
 
-    // ---------- helper ----------
+    // ============================================================
+    //  Helper — isi data tampilan form Buat
+    // ============================================================
 
     private async Task IsiDataTampilan(BuatPengaduanViewModel vm, int idUser)
     {
         var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.IdUser == idUser);
         vm.NamaPelapor = user?.Nama ?? string.Empty;
-        vm.NpmPelapor = user?.Npm ?? string.Empty;
+        vm.NpmPelapor  = user?.Npm  ?? string.Empty;
 
-        vm.DaftarKategori = await _db.Kategori.AsNoTracking()
+        vm.DaftarKategori = await _db.Kategori
+            .AsNoTracking()
             .OrderBy(k => k.NamaKategori)
-            .Select(k => new SelectListItem { Value = k.IdKategori.ToString(), Text = k.NamaKategori })
+            .Select(k => new SelectListItem
+            {
+                Value = k.IdKategori.ToString(),
+                Text  = k.NamaKategori
+            })
             .ToListAsync();
-    }
-}
-namespace SafeCampus.Controllers
-{
-    public class PengaduanController
-    {
-﻿
-using Microsoft.AspNetCore.Mvc;
-using SafeCampus.Models;
-using System;
-using System.Collections.Generic;
-
-namespace SafeCampus.Controllers
-{
-    public class PengaduanController : Controller
-    {
-        // DETAIL PENGADUAN
-        public IActionResult Detail(int id = 1)
-        {
-            var pengaduan = new Pengaduan
-            {
-                IdPengaduan = id,
-                IdUser = 1,
-                Kategori = "Verbal",
-                TanggalPengaduan = new DateTime(2026, 11, 1),
-                LokasiKejadian = "Lingkungan Kampus",
-                Deskripsi = "Pengaduan mengenai tindakan pembullyan verbal.",
-                Status = "Diproses"
-            };
-
-            // RIWAYAT STATUS
-            var riwayat = new List<RiwayatStatus>
-            {
-                new RiwayatStatus
-                {
-                    StatusSebelumnya = "Menunggu",
-                    StatusSesudahnya = "Diproses",
-                    TanggalPerubahan = new DateTime(2026, 11, 3, 11, 6, 0),
-                    Keterangan = "Pengaduan sedang ditindaklanjuti oleh admin."
-                },
-
-                new RiwayatStatus
-                {
-                    StatusSebelumnya = "",
-                    StatusSesudahnya = "Menunggu",
-                    TanggalPerubahan = new DateTime(2026, 11, 1, 10, 0, 0),
-                    Keterangan = "Pengaduan berhasil dikirim dan menunggu penanganan."
-                }
-            };
-
-            // TANGGAPAN
-            var tanggapan = new List<Tanggapan>
-            {
-                new Tanggapan
-                {
-                    Pengirim = "Admin",
-                    IsiTanggapan = "Terima kasih telah melaporkan kejadian ini. Kami sedang melakukan peninjauan lebih lanjut.",
-                    TanggalTanggapan = new DateTime(2026, 11, 3, 11, 6, 0)
-                },
-
-                new Tanggapan
-                {
-                    Pengirim = "Mahasiswa",
-                    IsiTanggapan = "Baik, terima kasih atas informasinya.",
-                    TanggalTanggapan = new DateTime(2026, 11, 3, 11, 30, 0)
-                }
-            };
-
-            ViewBag.Riwayat = riwayat;
-            ViewBag.Tanggapan = tanggapan;
-
-            // Memanggil DetailPengaduan.cshtml
-            return View("DetailPengaduan", pengaduan);
-        }
-
-        // HALAMAN TANGGAPAN
-        public IActionResult Tanggapan(int id)
-        {
-            ViewBag.IdPengaduan = id;
-            return View();
-        }
-
-        // PROSES KIRIM TANGGAPAN
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult KirimTanggapan(int idPengaduan, string isiTanggapan)
-        {
-            if (string.IsNullOrWhiteSpace(isiTanggapan))
-            {
-                TempData["Error"] = "Tanggapan tidak boleh kosong.";
-
-                return RedirectToAction("Tanggapan", new { id = idPengaduan });
-            }
-
-            // Data sementara untuk pengujian
-            TempData["PesanBerhasil"] = "Tanggapan berhasil dikirim.";
-
-            return RedirectToAction("Detail", new { id = idPengaduan });
-        }
     }
 }

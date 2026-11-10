@@ -1,63 +1,99 @@
-﻿@model SafeCampus.Models.RegisterViewModel
-
+@model SafeCampus.Models.RegisterViewModel
 @{
     ViewData["Title"] = "Daftar Akun";
+    Layout = null; // Halaman register tanpa navbar
 }
-
-<div class="container mt-5 mb-5">
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daftar Akun - SafeCampus</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body { background-color: #FFF8F0; }
+        .brand { font-size: 2rem; font-weight: 700; color: #5C3D2E; }
+        .sub   { color: #80685B; font-size: .95rem; }
+        .card-custom { border-radius: 18px; border: 1px solid #E9DCD1; }
+        .btn-aksen   { background: #F28C28; color: white; border: none; }
+        .btn-aksen:hover { background: #E76F51; color: white; }
+        .link-custom { color: #F28C28; font-weight: 600; text-decoration: none; }
+        .link-custom:hover { color: #E76F51; }
+        .text-primer { color: #5C3D2E; }
+    </style>
+</head>
+<body>
+<div class="container my-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <div class="card card-custom shadow-lg">
+
+            <div class="text-center mb-4">
+                <div class="brand">🛡️ SafeCampus</div>
+                <div class="sub">Daftar Akun Mahasiswa</div>
+            </div>
+
+            <div class="card card-custom shadow-sm">
                 <div class="card-body p-4">
-                    <h3 class="text-center mb-4 text-primer fw-bold">Daftar Akun Baru</h3>
+                    <h3 class="text-center mb-4 text-primer fw-bold">Buat Akun Baru</h3>
+
                     <form asp-action="Register" method="post">
+                        @Html.AntiForgeryToken()
 
                         <div class="mb-3">
-                            <label asp-for="Nama" class="form-label fw-semibold">Nama Lengkap</label>
+                            <label asp-for="Nama" class="form-label fw-semibold"></label>
                             <input asp-for="Nama" class="form-control" placeholder="Masukkan nama lengkap" />
-                            <span asp-validation-for="Nama" class="text-danger"></span>
+                            <span asp-validation-for="Nama" class="text-danger" style="font-size:.85rem"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="NPM" class="form-label fw-semibold">NPM</label>
-                            <input asp-for="NPM" class="form-control" placeholder="Masukkan NPM" />
-                            <span asp-validation-for="NPM" class="text-danger"></span>
+                            <label asp-for="Npm" class="form-label fw-semibold"></label>
+                            <input asp-for="Npm" class="form-control" placeholder="Contoh: 2210101001" inputmode="text" />
+                            <div class="form-text">NPM akan digunakan sebagai username login.</div>
+                            <span asp-validation-for="Npm" class="text-danger" style="font-size:.85rem"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Email" class="form-label fw-semibold">Email</label>
+                            <label asp-for="Email" class="form-label fw-semibold"></label>
                             <input asp-for="Email" class="form-control" type="email" placeholder="contoh@kampus.edu" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
+                            <span asp-validation-for="Email" class="text-danger" style="font-size:.85rem"></span>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Password" class="form-label fw-semibold">Password</label>
-                            <input asp-for="Password" class="form-control" type="password" />
-                            <span asp-validation-for="Password" class="text-danger"></span>
+                            <label asp-for="JurusanId" class="form-label fw-semibold"></label>
+                            <select asp-for="JurusanId" asp-items="Model.JurusanOptions" class="form-select">
+                                <option value="">-- Pilih Jurusan --</option>
+                            </select>
+                            <span asp-validation-for="JurusanId" class="text-danger" style="font-size:.85rem"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label fw-semibold"></label>
+                            <input asp-for="Password" class="form-control" type="password" placeholder="Minimal 6 karakter" />
+                            <span asp-validation-for="Password" class="text-danger" style="font-size:.85rem"></span>
                         </div>
 
                         <div class="mb-4">
-                            <label asp-for="ConfirmPassword" class="form-label fw-semibold">Konfirmasi Password</label>
-                            <input asp-for="ConfirmPassword" class="form-control" type="password" />
-                            <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                            <label asp-for="ConfirmPassword" class="form-label fw-semibold"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" type="password" placeholder="Ulangi password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger" style="font-size:.85rem"></span>
                         </div>
 
-                        <button type="submit" class="btn btn-aksen w-100 py-2">Daftar</button>
+                        <button type="submit" class="btn btn-aksen w-100 py-2 fw-bold">Daftar Sekarang</button>
 
                         <div class="text-center mt-4">
-                            Sudah punya akun? <a asp-controller="Account" asp-action="Login" class="link-custom">Login di sini</a>
+                            Sudah punya akun?
+                            <a asp-controller="Account" asp-action="Login" class="link-custom">Login di sini</a>
                         </div>
-                        <div class="mb-3">
-    <label asp-for="JurusanId" class="form-label fw-semibold">Jurusan</label>
-    <select asp-for="JurusanId" asp-items="Model.JurusanOptions" class="form-control">
-        <option value="">-- Pilih Jurusan Anda --</option>
-    </select>
-    <span asp-validation-for="JurusanId" class="text-danger"></span>
-</div>
-                  
                     </form>
+
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>
