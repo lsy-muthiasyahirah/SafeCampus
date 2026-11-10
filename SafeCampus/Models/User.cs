@@ -20,7 +20,6 @@ namespace SafeCampus.Models
         [Required]
         public string Password { get; set; }
 
-        // --- TAMBAHKAN DUA BARIS INI (FOREIGN KEY) ---
         [Required]
         public int JurusanId { get; set; }
 

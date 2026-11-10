@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 
 namespace SafeCampus.Models
 {
@@ -22,9 +23,14 @@ namespace SafeCampus.Models
         [DataType(DataType.Password)]
         [Compare("Password", ErrorMessage = "Password dan konfirmasi tidak cocok")]
         public string ConfirmPassword { get; set; }
+
+        [Required(ErrorMessage = "Jurusan wajib dipilih")]
+        public int JurusanId { get; set; }
+
+        public IEnumerable<SelectListItem>? JurusanOptions { get; set; }
     }
 
-public class LoginViewModel
+    public class LoginViewModel
     {
         [Required(ErrorMessage = "Username harus diisi")]
         public string Username { get; set; }

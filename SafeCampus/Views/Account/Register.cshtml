@@ -1,4 +1,5 @@
 ﻿@model SafeCampus.Models.RegisterViewModel
+
 @{
     ViewData["Title"] = "Daftar Akun";
 }
@@ -46,7 +47,14 @@
                         <div class="text-center mt-4">
                             Sudah punya akun? <a asp-controller="Account" asp-action="Login" class="link-custom">Login di sini</a>
                         </div>
-
+                        <div class="mb-3">
+    <label asp-for="JurusanId" class="form-label fw-semibold">Jurusan</label>
+    <select asp-for="JurusanId" asp-items="Model.JurusanOptions" class="form-control">
+        <option value="">-- Pilih Jurusan Anda --</option>
+    </select>
+    <span asp-validation-for="JurusanId" class="text-danger"></span>
+</div>
+                  
                     </form>
                 </div>
             </div>
