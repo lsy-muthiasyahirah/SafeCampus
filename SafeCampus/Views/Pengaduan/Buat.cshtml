@@ -1,0 +1,141 @@
+﻿@model SafeCampus.ViewModels.BuatPengaduanViewModel
+@{
+    ViewData["Title"] = "Buat Pengaduan";
+}
+
+<div class="container" style="max-width: 760px;">
+    <div class="sc-header">
+        <h1>Buat Pengaduan</h1>
+        <p>Ceritakan apa yang terjadi. Kamu tidak sendirian, dan laporanmu akan ditangani dengan serius.</p>
+    </div>
+
+    <form asp-action="Buat" method="post" enctype="multipart/form-data" class="sc-card" novalidate>
+        <div class="sc-privasi">
+            Identitas pelapor hanya dapat dilihat oleh admin/Satgas yang menangani laporan ini.
+        </div>
+
+        <div asp-validation-summary="ModelOnly" class="mb-3"></div>
+
+        <div class="mb-3">
+            <label asp-for="IdKategori" class="form-label"></label>
+            <select asp-for="IdKategori" asp-items="Model.DaftarKategori" class="form-select">
+                <option value="">-- Pilih kategori --</option>
+            </select>
+            <span asp-validation-for="IdKategori" class="text-danger"></span>
+        </div>
+
+        <div class="sc-section-title mt-4">Data korban</div>
+
+        <div class="form-check mb-3">
+            <input asp-for="SayaKorban" class="form-check-input"
+                   data-nama="@Model.NamaPelapor" data-npm="@Model.NpmPelapor" />
+            <label asp-for="SayaKorban" class="form-check-label"></label>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-7">
+                <label asp-for="NamaKorban" class="form-label"></label>
+                <input asp-for="NamaKorban" class="form-control" autocomplete="off" />
+                <span asp-validation-for="NamaKorban" class="text-danger"></span>
+            </div>
+            <div class="col-md-5">
+                <label asp-for="NpmKorban" class="form-label"></label>
+                <input asp-for="NpmKorban" class="form-control" inputmode="numeric" autocomplete="off" />
+                <span asp-validation-for="NpmKorban" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="sc-section-title mt-4">Detail kejadian</div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-5">
+                <label asp-for="TanggalKejadian" class="form-label"></label>
+                <input asp-for="TanggalKejadian" type="date" class="form-control"
+                       max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                <span asp-validation-for="TanggalKejadian" class="text-danger"></span>
+            </div>
+            <div class="col-md-7">
+                <label asp-for="LokasiKejadian" class="form-label"></label>
+                <input asp-for="LokasiKejadian" class="form-control" placeholder="Contoh: Kantin gedung B, grup WhatsApp angkatan" />
+                <span asp-validation-for="LokasiKejadian" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Deskripsi" class="form-label"></label>
+            <textarea asp-for="Deskripsi" rows="6" class="form-control"
+                      placeholder="Apa yang terjadi, siapa yang terlibat, dan sudah berapa lama berlangsung?"></textarea>
+            <span asp-validation-for="Deskripsi" class="text-danger"></span>
+        </div>
+
+        <div class="mb-4">
+            <label asp-for="Bukti" class="form-label"></label>
+            <input asp-for="Bukti" type="file" class="form-control" multiple accept=".jpg,.jpeg,.png,.pdf" />
+            <div class="form-text">Opsional. Maksimal 5 file, masing-masing 5 MB. Format JPG, PNG, atau PDF.</div>
+            <ul id="daftarBukti" class="sc-file-list"></ul>
+            <div id="pesanBukti" class="sc-file-error"></div>
+            <span asp-validation-for="Bukti" class="text-danger"></span>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-sc">Kirim Pengaduan</button>
+            <a asp-action="Riwayat" class="btn btn-sc-outline">Batal</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            // --- Centang "Saya adalah korban": isi otomatis dari profil ---
+            const cek = document.getElementById('SayaKorban');
+            const nama = document.getElementById('NamaKorban');
+            const npm = document.getElementById('NpmKorban');
+
+            function kunci(aktif) { nama.readOnly = aktif; npm.readOnly = aktif; }
+
+            if (cek.checked) kunci(true);
+            cek.addEventListener('change', function () {
+                if (cek.checked) {
+                    nama.value = cek.dataset.nama || '';
+                    npm.value = cek.dataset.npm || '';
+                    kunci(true);
+                } else {
+                    nama.value = '';
+                    npm.value = '';
+                    kunci(false);
+                }
+            });
+
+            // --- Cek file bukti di sisi browser (server tetap memeriksa ulang) ---
+            const input = document.getElementById('Bukti');
+            const daftar = document.getElementById('daftarBukti');
+            const pesan = document.getElementById('pesanBukti');
+            const MAKS_FILE = 5, MAKS_BYTE = 5 * 1024 * 1024;
+
+            input.addEventListener('change', function () {
+                daftar.innerHTML = '';
+                pesan.textContent = '';
+                const files = Array.from(input.files);
+
+                if (files.length > MAKS_FILE) {
+                    pesan.textContent = 'Maksimal ' + MAKS_FILE + ' file.';
+                    input.value = '';
+                    return;
+                }
+                const terlaluBesar = files.find(function (f) { return f.size > MAKS_BYTE; });
+                if (terlaluBesar) {
+                    pesan.textContent = '"' + terlaluBesar.name + '" melebihi 5 MB.';
+                    input.value = '';
+                    return;
+                }
+                files.forEach(function (f) {
+                    const li = document.createElement('li');
+                    li.textContent = f.name + ' (' + Math.max(1, Math.round(f.size / 1024)) + ' KB)';
+                    daftar.appendChild(li);
+                });
+            });
+        })();
+    </script>
+}
