@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace SafeCampus.Models;
 
 [Table("pengaduan")]
-public class Pengaduan
+public class Pengaduan : EntitasLaporan
 {
     [Key, Column("id_pengaduan")]
     public int IdPengaduan { get; set; }
@@ -30,18 +30,9 @@ public class Pengaduan
     [Column("tanggal_kejadian", TypeName = "date")]
     public DateTime TanggalKejadian { get; set; }
 
-    [Column("tanggal_pengaduan")]
-    public DateTime TanggalPengaduan { get; set; } = DateTime.Now;
-
-    [Column("lokasi_kejadian"), MaxLength(255)]
-    public string LokasiKejadian { get; set; } = string.Empty;
-
-    [Column("deskripsi", TypeName = "text")]
-    public string Deskripsi { get; set; } = string.Empty;
-
     // ENCAPSULATION: status tidak bisa diubah sembarangan dari luar class.
     [Column("status")]
-    public StatusLaporan Status { get; set; } = StatusLaporan.MenungguValidasi;
+    public StatusLaporan Status { get; private set; } = StatusLaporan.MenungguValidasi;
 
     // Diisi saat admin meminta info tambahan
     [Column("batas_waktu_balasan")]
@@ -65,4 +56,8 @@ public class Pengaduan
         => Status == StatusLaporan.ButuhInformasi
            && BatasWaktuBalasan.HasValue
            && BatasWaktuBalasan.Value < DateTime.Now;
+
+    // Implementasi abstract method dari EntitasLaporan
+    public override string BuatRingkasanLaporan()
+        => $"[Pengaduan #{IdPengaduan}] {LokasiKejadian} ({TanggalKejadian:dd/MM/yyyy}) - Status: {Status.Label()}";
 }
