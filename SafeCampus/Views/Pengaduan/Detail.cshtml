@@ -1,10 +1,11 @@
-﻿@model SafeCampus.Models.Pengaduan
+@model SafeCampus.Models.Pengaduan
 @using SafeCampus.Models
 @{
     ViewData["Title"] = "Pengaduan #" + Model.IdPengaduan;
+    bool isAdmin = User.IsInRole("admin");
 }
 
-<div class="container" style="max-width: 760px;">
+<div class="container" style="max-width: 800px;">
     <div class="sc-header d-flex justify-content-between align-items-start flex-wrap gap-2">
         <div>
             <h1>Pengaduan #@Model.IdPengaduan</h1>
@@ -18,21 +19,23 @@
         <div class="sc-alert-sukses">@sukses</div>
     }
 
+    <!-- Data Pengaduan -->
     <div class="sc-card">
-        <div class="sc-section-title">Data pengaduan</div>
+        <div class="sc-section-title">Data Pengaduan</div>
         <dl class="sc-detail row mb-0">
-            <div class="col-md-6"><dt>Nama korban</dt><dd>@Model.NamaKorban</dd></div>
-            <div class="col-md-6"><dt>NPM korban</dt><dd>@Model.NpmKorban</dd></div>
-            <div class="col-md-6"><dt>Tanggal kejadian</dt><dd>@Model.TanggalKejadian.ToString("dd MMMM yyyy")</dd></div>
-            <div class="col-md-6"><dt>Lokasi kejadian</dt><dd>@Model.LokasiKejadian</dd></div>
-            <div class="col-md-6"><dt>Dikirim pada</dt><dd>@Model.TanggalPengaduan.ToString("dd MMMM yyyy, HH:mm")</dd></div>
-            <div class="col-md-6"><dt>Dilaporkan oleh</dt><dd>@(Model.Pelapor?.Nama ?? "-")</dd></div>
-            <div class="col-12"><dt>Kronologi</dt><dd class="sc-deskripsi">@Model.Deskripsi</dd></div>
+            <div class="col-md-6"><dt>Nama Korban</dt><dd>@Model.NamaKorban</dd></div>
+            <div class="col-md-6"><dt>NPM Korban</dt><dd>@Model.NpmKorban</dd></div>
+            <div class="col-md-6"><dt>Tanggal Kejadian</dt><dd>@Model.TanggalKejadian.ToString("dd MMMM yyyy")</dd></div>
+            <div class="col-md-6"><dt>Lokasi Kejadian</dt><dd>@Model.LokasiKejadian</dd></div>
+            <div class="col-md-6"><dt>Dikirim Pada</dt><dd>@Model.TanggalPengaduan.ToString("dd MMMM yyyy, HH:mm")</dd></div>
+            <div class="col-md-6"><dt>Dilaporkan Oleh</dt><dd>@(Model.Pelapor?.Nama ?? "-") (@(Model.Pelapor?.Npm ?? "-"))</dd></div>
+            <div class="col-12 mt-2"><dt>Kronologi</dt><dd class="sc-deskripsi">@Model.Deskripsi</dd></div>
         </dl>
     </div>
 
+    <!-- Bukti Pendukung -->
     <div class="sc-card">
-        <div class="sc-section-title">Bukti pendukung</div>
+        <div class="sc-section-title">Bukti Pendukung</div>
         @if (!Model.DaftarBukti.Any())
         {
             <p class="text-muted mb-0">Tidak ada bukti yang dilampirkan.</p>
@@ -46,30 +49,128 @@
                     if (b.IsGambar())
                     {
                         <a href="@url" target="_blank" rel="noopener">
-                            <span>
-                                <img src="@url" alt="@b.NamaFile" />
-                                @b.NamaFile
-                            </span>
+                            <img src="@url" alt="@b.NamaFile" />
+                            <span>@b.NamaFile</span>
                         </a>
                     }
                     else
                     {
-                        <a href="@url" target="_blank" rel="noopener">@b.NamaFile</a>
+                        <a href="@url" target="_blank" rel="noopener">📄 @b.NamaFile</a>
                     }
                 }
             </div>
         }
     </div>
 
-    @* ===== AREA MODUL SHAFA =====
-       Tempel di sini: riwayat status, tanggapan mahasiswa-admin.
-       Tiara/Shafa: gunakan class .sc-card agar tampilan seragam. *@
+    <!-- Riwayat Status -->
+    @if (Model.DaftarRiwayat.Any())
+    {
+        <div class="sc-card">
+            <div class="sc-section-title">Riwayat Status</div>
+            <div class="timeline ps-4" style="border-left: 2px solid #E9DCD1;">
+                @foreach (var r in Model.DaftarRiwayat.OrderByDescending(x => x.TanggalPerubahan))
+                {
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between flex-wrap">
+                            <strong style="color:#E76F51;">→ @r.StatusSesudahnya</strong>
+                            <small class="text-muted">@r.TanggalPerubahan.ToString("dd MMM yyyy HH:mm")</small>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(r.Keterangan))
+                        {
+                            <p class="mb-0 mt-1" style="font-size:.88rem; color:#555;">@r.Keterangan</p>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(r.DiubahOleh))
+                        {
+                            <small class="text-muted">oleh @r.DiubahOleh</small>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Tanggapan -->
+    <div class="sc-card">
+        <div class="sc-section-title d-flex justify-content-between">
+            <span>Tanggapan</span>
+            <span class="text-muted" style="font-weight:400; font-size:.85rem;">@Model.DaftarTanggapan.Count pesan</span>
+        </div>
+
+        @if (!Model.DaftarTanggapan.Any())
+        {
+            <p class="text-muted">Belum ada tanggapan pada pengaduan ini.</p>
+        }
+        else
+        {
+            @foreach (var t in Model.DaftarTanggapan.OrderBy(x => x.TanggalTanggapan))
+            {
+                bool dariAdmin = t.Pengirim == "admin";
+                <div class="mb-3 p-3 rounded"
+                     style="background: @(dariAdmin ? "#FFF3CD" : "#F0F4FF"); border: 1px solid @(dariAdmin ? "#FFE69C" : "#D0D8FF");">
+                    <div class="d-flex justify-content-between flex-wrap">
+                        <strong style="color: @(dariAdmin ? "#856404" : "#004085");">
+                            @(dariAdmin ? "👤 Admin" : "🎓 " + (t.User?.Nama ?? "Mahasiswa"))
+                        </strong>
+                        <small class="text-muted">@t.TanggalTanggapan.ToString("dd MMM yyyy HH:mm")</small>
+                    </div>
+                    <p class="mb-0 mt-1">@t.IsiTanggapan</p>
+                </div>
+            }
+        }
+
+        <div class="mt-3">
+            <a asp-action="Tanggapan" asp-route-id="@Model.IdPengaduan" class="btn btn-sc-outline btn-sm">
+                ✏️ Balas / Tanggapi
+            </a>
+        </div>
+    </div>
+
+    <!-- Ubah Status (admin only) -->
+    @if (isAdmin)
+    {
+        <div class="sc-card">
+            <div class="sc-section-title">Ubah Status Pengaduan</div>
+            <form asp-action="UbahStatus" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.IdPengaduan" />
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold" style="font-size:.88rem;">Status Baru</label>
+                        <select name="statusBaru" class="form-select">
+                            @foreach (var s in Enum.GetValues<StatusLaporan>())
+                            {
+                                if (Model.Status == s)
+                                {
+                                    <option value="@s" selected>@s.Label()</option>
+                                }
+                                else
+                                {
+                                    <option value="@s">@s.Label()</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-7">
+                        <label class="form-label fw-semibold" style="font-size:.88rem;">Keterangan (opsional)</label>
+                        <input type="text" name="keterangan" class="form-control"
+                               placeholder="Alasan perubahan status..." maxlength="300" />
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-sc">Simpan Perubahan Status</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    }
 
     <div class="mt-3">
-        <a asp-action="Riwayat" class="btn btn-sc-outline">&larr; Kembali ke riwayat</a>
+        @if (isAdmin)
+        {
+            <a asp-action="Index" class="btn btn-sc-outline">&larr; Kembali ke Dashboard</a>
+        }
+        else
+        {
+            <a asp-action="Riwayat" class="btn btn-sc-outline">&larr; Kembali ke Riwayat</a>
+        }
     </div>
-</div>@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+</div>
