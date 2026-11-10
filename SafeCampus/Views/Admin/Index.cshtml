@@ -1,0 +1,244 @@
+﻿@{
+    Layout = null;
+    ViewData["Title"] = "Dashboard Admin";
+}
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Dashboard Admin - SafeCampus</title>
+
+    <link rel="stylesheet"
+          href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet"
+          href="~/css/admin.css"
+          asp-append-version="true" />
+</head>
+
+<body>
+
+    <div class="admin-wrapper">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+
+            <div class="brand">
+                <div class="brand-icon">SC</div>
+                <div>
+                    <h4>SafeCampus</h4>
+                    <small>ADMIN PANEL</small>
+                </div>
+            </div>
+
+            <div class="sidebar-menu">
+
+                <p class="menu-label">MENU UTAMA</p>
+
+                <a href="/Admin/Index" class="menu-link active">
+                    <span>▦</span> Dashboard
+                </a>
+
+                <a href="/Admin/Pengaduan" class="menu-link">
+                    <span>▤</span> Daftar Pengaduan
+                </a>
+
+                <a href="/Admin/Kategori" class="menu-link">
+                    <span>▧</span> Kategori Pengaduan
+                </a>
+
+                <a href="/Admin/TindakLanjut" class="menu-link">
+                    <span>◷</span> Tindak Lanjut
+                </a>
+
+                <a href="/Admin/Pendampingan" class="menu-link">
+                    <span>♡</span> Pendampingan
+                </a>
+
+            </div>
+
+            <div class="sidebar-bottom">
+                <a href="/Account/Logout" class="menu-link logout">
+                    <span>↪</span> Keluar
+                </a>
+            </div>
+
+        </aside>
+
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+
+            <!-- HEADER -->
+            <header class="topbar">
+
+                <div>
+                    <h3>Dashboard</h3>
+                    <p>Selamat datang di panel administrasi SafeCampus.</p>
+                </div>
+
+                <div class="admin-profile">
+                    <div class="profile-avatar">A</div>
+                    <div>
+                        <strong>Administrator</strong>
+                        <small>Admin SafeCampus</small>
+                    </div>
+                </div>
+
+            </header>
+
+
+            <!-- CONTENT -->
+            <section class="dashboard-content">
+
+                <div class="welcome-box">
+                    <div>
+                        <h4>Selamat Datang, Admin!</h4>
+                        <p>
+                            Pantau dan kelola seluruh pengaduan
+                            bullying di lingkungan kampus.
+                        </p>
+                    </div>
+                    <div class="welcome-icon">♡</div>
+                </div>
+
+
+                <!-- STATISTICS -->
+                <h5 class="section-title">Ringkasan Pengaduan</h5>
+
+                <div class="stats-grid">
+
+                    <div class="stat-card">
+                        <div class="stat-icon orange">▤</div>
+                        <p>Total Pengaduan</p>
+                        <h2>120</h2>
+                        <small>Seluruh laporan masuk</small>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon peach">◷</div>
+                        <p>Menunggu Validasi</p>
+                        <h2>15</h2>
+                        <small>Perlu pemeriksaan</small>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon terracotta">↻</div>
+                        <p>Sedang Diproses</p>
+                        <h2>35</h2>
+                        <small>Dalam penanganan</small>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-icon brown">✓</div>
+                        <p>Pengaduan Selesai</p>
+                        <h2>70</h2>
+                        <small>Sudah ditindaklanjuti</small>
+                    </div>
+
+                </div>
+
+
+                <!-- LATEST REPORTS -->
+                <div class="report-section">
+
+                    <div class="section-heading">
+                        <div>
+                            <h5>Pengaduan Terbaru</h5>
+                            <p>Daftar laporan yang masuk ke SafeCampus</p>
+                        </div>
+
+                        <a href="/Admin/Pengaduan"
+                           class="btn-view">
+                            Lihat Semua
+                        </a>
+                    </div>
+
+                    <div class="table-responsive">
+
+                        <table class="table report-table">
+
+                            <thead>
+                                <tr>
+                                    <th>ID Laporan</th>
+                                    <th>Kategori</th>
+                                    <th>Tanggal</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                <tr>
+                                    <td>SC-001</td>
+                                    <td>Bullying Verbal</td>
+                                    <td>10 Nov 2026</td>
+                                    <td>
+                                        <span class="status waiting">
+                                            Menunggu
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="/Admin/Detail"
+                                           class="btn-detail">
+                                            Detail
+                                        </a>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>SC-002</td>
+                                    <td>Bullying Sosial</td>
+                                    <td>09 Nov 2026</td>
+                                    <td>
+                                        <span class="status process">
+                                            Diproses
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="/Admin/Detail"
+                                           class="btn-detail">
+                                            Detail
+                                        </a>
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td>SC-003</td>
+                                    <td>Bullying Fisik</td>
+                                    <td>08 Nov 2026</td>
+                                    <td>
+                                        <span class="status completed">
+                                            Selesai
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="/Admin/Detail"
+                                           class="btn-detail">
+                                            Detail
+                                        </a>
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
