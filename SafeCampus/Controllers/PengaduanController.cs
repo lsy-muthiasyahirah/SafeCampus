@@ -142,7 +142,7 @@ public class PengaduanController : Controller
             })
             .ToListAsync();
 
-        return View(new RiwayatPengaduanViewModel
+        return View(new PagedResult<RiwayatItem>
         {
             Items = items,
             FilterStatus = status,
