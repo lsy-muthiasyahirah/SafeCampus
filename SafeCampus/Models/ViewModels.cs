@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
+using SafeCampus.Models;
 
 namespace SafeCampus.Models;
 
@@ -54,8 +55,9 @@ public class RegisterViewModel
 // ===== ViewModel Buat Pengaduan =====
 public class BuatPengaduanViewModel
 {
+    // Data pelapor (diisi otomatis dari session / db)
     public string NamaPelapor { get; set; } = string.Empty;
-    public string NpmPelapor { get; set; } = string.Empty;
+    public string NpmPelapor  { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Kategori wajib dipilih")]
     [Display(Name = "Kategori Pengaduan")]
@@ -91,44 +93,55 @@ public class BuatPengaduanViewModel
     [Display(Name = "Bukti Pendukung")]
     public List<IFormFile>? Bukti { get; set; }
 
+    // Dropdown kategori
     public List<SelectListItem> DaftarKategori { get; set; } = new();
 }
 
 // ===== ViewModel Riwayat Pengaduan =====
 public class RiwayatItem
 {
-    public int IdPengaduan { get; set; }
-    public string NamaKategori { get; set; } = string.Empty;
-    public string LokasiKejadian { get; set; } = string.Empty;
-    public DateTime TanggalKejadian { get; set; }
-    public DateTime TanggalPengaduan { get; set; }
-    public StatusLaporan Status { get; set; }
-    public int JumlahBukti { get; set; }
+    public int           IdPengaduan      { get; set; }
+    public string        NamaKategori     { get; set; } = string.Empty;
+    public string        LokasiKejadian   { get; set; } = string.Empty;
+    public DateTime      TanggalKejadian  { get; set; }
+    public DateTime      TanggalPengaduan { get; set; }
+    public StatusLaporan Status           { get; set; }
+    public int           JumlahBukti      { get; set; }
+}
+
+public class RiwayatPengaduanViewModel
+{
+    public List<RiwayatItem> Items        { get; set; } = new();
+    public StatusLaporan?    FilterStatus { get; set; }
+    public int               Halaman      { get; set; } = 1;
+    public int               TotalHalaman { get; set; } = 1;
+    public int               TotalData    { get; set; }
 }
 
 // ===== ViewModel Dashboard Admin =====
 public class AdminDashboardItem
 {
-    public int IdPengaduan { get; set; }
-    public string NamaPelapor { get; set; } = string.Empty;
-    public string NamaKategori { get; set; } = string.Empty;
-    public string LokasiKejadian { get; set; } = string.Empty;
-    public DateTime TanggalPengaduan { get; set; }
-    public StatusLaporan Status { get; set; }
+    public int           IdPengaduan      { get; set; }
+    public string        NamaPelapor      { get; set; } = string.Empty;
+    public string        NamaKategori     { get; set; } = string.Empty;
+    public string        LokasiKejadian   { get; set; } = string.Empty;
+    public DateTime      TanggalPengaduan { get; set; }
+    public StatusLaporan Status           { get; set; }
 }
 
 public class AdminDashboardViewModel
 {
-    public List<AdminDashboardItem> Items { get; set; } = new();
-    public StatusLaporan? FilterStatus { get; set; }
-    public int Halaman { get; set; } = 1;
-    public int TotalHalaman { get; set; } = 1;
-    public int TotalData { get; set; }
+    public List<AdminDashboardItem> Items        { get; set; } = new();
+    public StatusLaporan?           FilterStatus { get; set; }
+    public int                      Halaman      { get; set; } = 1;
+    public int                      TotalHalaman { get; set; } = 1;
+    public int                      TotalData    { get; set; }
 
-    public int JumlahMenunggu { get; set; }
-    public int JumlahDiproses { get; set; }
-    public int JumlahSelesai { get; set; }
-    public int JumlahTotal { get; set; }
+    // Statistik cepat
+    public int JumlahMenunggu   { get; set; }
+    public int JumlahDiproses   { get; set; }
+    public int JumlahSelesai    { get; set; }
+    public int JumlahTotal      { get; set; }
 }
 
 // ===== ViewModel Tanggapan =====

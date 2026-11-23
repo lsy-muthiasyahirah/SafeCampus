@@ -1,24 +1,55 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using SafeCampus.Models;
+using SafeCampus.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// =========================================================
+//  SERVICES
+// =========================================================
+
 builder.Services.AddControllersWithViews();
 
-// --- KODE DATABASE HARUS DI SINI (SEBELUM BUILD) ---
-// Mengambil URL koneksi dari appsettings.json
+// Database — MySQL via EF Core
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-// Mendaftarkan ApplicationDbContext menggunakan MySQL
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-// ---------------------------------------------------
 
-// BUILD APLIKASI DILAKUKAN SETELAH SEMUA LAYANAN DIDAFTARKAN
+// Cookie Authentication (login / logout)
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath        = "/Account/Login";
+        options.LogoutPath       = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/Login";
+        options.ExpireTimeSpan   = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
+    });
+
+// File upload service
+builder.Services.AddScoped<IFileUploadService, BuktiUploadService>();
+
+// =========================================================
+//  BUILD
+// =========================================================
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// =========================================================
+//  MIGRASI & SEED — Jalankan otomatis saat startup
+// =========================================================
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.Migrate();   // jalankan migration yang belum diaplikasikan
+}
+
+// =========================================================
+//  MIDDLEWARE
+// =========================================================
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -27,17 +58,16 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+app.UseAuthentication();   // HARUS sebelum UseAuthorization
 app.UseAuthorization();
+
 app.MapStaticAssets();
 
-// ROUTE DETAIL PENGADUAN
-app.MapControllerRoute(
-    name: "detailPengaduan",
-    pattern: "Pengaduan/Detail/{id}",
-    defaults: new { controller = "Pengaduan", action = "Detail", id = 1 })
-    .WithStaticAssets();
+// =========================================================
+//  ROUTES
+// =========================================================
 
-// ROUTE DEFAULT LOGIN
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Account}/{action=Login}/{id?}")

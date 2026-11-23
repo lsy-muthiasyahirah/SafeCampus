@@ -1,5 +1,5 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="id">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,40 +8,162 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SafeCampus.styles.css" asp-append-version="true" />
+    <style>
+        :root {
+            --sc-primer:  #5C3D2E;
+            --sc-aksen:   #F28C28;
+            --sc-aksen2:  #E76F51;
+            --sc-bg:      #FFF8F0;
+            --sc-border:  #E9DCD1;
+        }
+        body { background-color: var(--sc-bg); }
+        .navbar-safecampus {
+            background-color: #fff;
+            border-bottom: 2px solid var(--sc-border);
+        }
+        .navbar-brand-sc {
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--sc-primer) !important;
+        }
+        .nav-link-sc { color: var(--sc-primer) !important; font-weight: 500; }
+        .nav-link-sc:hover { color: var(--sc-aksen) !important; }
+        .nav-user-badge {
+            background: var(--sc-bg);
+            border: 1px solid var(--sc-border);
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            color: var(--sc-primer);
+        }
+        .btn-logout {
+            background: transparent;
+            border: 1px solid var(--sc-aksen2);
+            color: var(--sc-aksen2);
+            border-radius: 8px;
+            padding: 4px 14px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .btn-logout:hover { background: var(--sc-aksen2); color: white; }
+
+        /* Badge status */
+        .sc-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+        .sc-badge-menungguvalidasi { background: #FFF3CD; color: #856404; }
+        .sc-badge-valid            { background: #D1ECF1; color: #0C5460; }
+        .sc-badge-butuhInformasi,
+        .sc-badge-butuhinformasi   { background: #FFE5D0; color: #9D3B0E; }
+        .sc-badge-diproses         { background: #CCE5FF; color: #004085; }
+        .sc-badge-selesai          { background: #D4EDDA; color: #155724; }
+        .sc-badge-ditolak          { background: #F8D7DA; color: #721C24; }
+
+        /* Card */
+        .sc-card { background: white; border-radius: 16px; padding: 24px; border: 1px solid var(--sc-border); margin-bottom: 20px; }
+        .sc-header { margin-bottom: 24px; }
+        .sc-header h1 { color: var(--sc-primer); font-weight: 700; }
+        .sc-header p  { color: #80685B; }
+        .sc-section-title { font-weight: 600; color: var(--sc-primer); font-size: 0.9rem; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 16px; }
+        .sc-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: white; border: 1px solid var(--sc-border); border-radius: 12px; margin-bottom: 10px; text-decoration: none; color: inherit; transition: box-shadow .2s; }
+        .sc-item:hover { box-shadow: 0 4px 16px rgba(92,61,46,.12); }
+        .sc-item-judul { font-weight: 600; color: var(--sc-primer); }
+        .sc-item-meta  { font-size: .85rem; color: #80685B; margin-top: 4px; }
+        .sc-kosong { text-align: center; padding: 48px 24px; }
+        .sc-privasi { background: #FFF3CD; border-radius: 10px; padding: 12px 16px; font-size: .88rem; color: #856404; margin-bottom: 20px; }
+        .sc-alert-sukses { background: #D4EDDA; color: #155724; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; }
+        .sc-deskripsi { white-space: pre-line; }
+        .btn-sc        { background: var(--sc-aksen); color: white; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 600; }
+        .btn-sc:hover  { background: var(--sc-aksen2); color: white; }
+        .btn-sc-outline { background: white; color: var(--sc-aksen2); border: 1px solid var(--sc-aksen2); padding: 10px 22px; border-radius: 10px; font-weight: 600; }
+        .btn-sc-outline:hover { background: var(--sc-aksen2); color: white; }
+        .card-custom { border-radius: 16px; border: 1px solid var(--sc-border); }
+        .text-primer  { color: var(--sc-primer) !important; }
+        .btn-aksen    { background: var(--sc-aksen); color: white; border: none; }
+        .btn-aksen:hover { background: var(--sc-aksen2); color: white; }
+        .link-custom  { color: var(--sc-aksen); text-decoration: none; font-weight: 600; }
+        .link-custom:hover { color: var(--sc-aksen2); }
+        .sc-file-list  { margin-top: 10px; padding-left: 20px; font-size: .88rem; color: #555; }
+        .sc-file-error { color: #dc3545; font-size: .88rem; margin-top: 6px; }
+        .sc-bukti a    { display: inline-flex; flex-direction: column; align-items: center; margin: 8px; text-decoration: none; color: var(--sc-primer); font-size: .85rem; }
+        .sc-bukti img  { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--sc-border); }
+        dl.sc-detail dt { font-size: .8rem; color: #80685B; font-weight: 500; margin-bottom: 2px; }
+        dl.sc-detail dd { font-weight: 600; color: var(--sc-primer); }
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-safecampus px-3 mb-0">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">SafeCampus</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                <a class="navbar-brand navbar-brand-sc" asp-controller="Home" asp-action="Index">
+                    🛡️ SafeCampus
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                        data-bs-target=".navbar-collapse" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between align-items-center">
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <ul class="navbar-nav flex-grow-1">
+                            @if (User.IsInRole("admin"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link nav-link-sc" asp-controller="Pengaduan" asp-action="Index">
+                                        📋 Semua Pengaduan
+                                    </a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link nav-link-sc" asp-controller="Pengaduan" asp-action="Riwayat">
+                                        📄 Riwayat Pengaduan
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link nav-link-sc" asp-controller="Pengaduan" asp-action="Buat">
+                                        ✏️ Buat Pengaduan
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="nav-user-badge">
+                                @(User.IsInRole("admin") ? "👤 Admin" : "🎓 " + User.FindFirst("Npm")?.Value)
+                                &nbsp;— @User.Identity.Name
+                            </span>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-logout">Keluar</button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <ul class="navbar-nav flex-grow-1"></ul>
+                        <div class="d-flex gap-2">
+                            <a class="btn btn-sm btn-outline-secondary" asp-controller="Account" asp-action="Login">Login</a>
+                            <a class="btn btn-sm btn-aksen" asp-controller="Account" asp-action="Register">Daftar</a>
+                        </div>
+                    }
+
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
+
+    <div class="container mt-4">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - SafeCampus - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="border-top footer text-muted mt-4">
+        <div class="container py-3 text-center" style="font-size:.85rem; color:#80685B;">
+            &copy; 2026 SafeCampus — Sistem Laporan Pengaduan Kampus
         </div>
     </footer>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

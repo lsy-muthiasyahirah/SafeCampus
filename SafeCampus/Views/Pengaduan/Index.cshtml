@@ -1,5 +1,106 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
+@model SafeCampus.Models.AdminDashboardViewModel
+@using SafeCampus.Models
 @{
+    ViewData["Title"] = "Dashboard Admin";
 }
+
+<div class="container" style="max-width: 960px;">
+    <div class="sc-header d-flex justify-content-between align-items-end flex-wrap gap-2">
+        <div>
+            <h1>Dashboard Pengaduan</h1>
+            <p>Kelola dan tindaklanjuti semua laporan pengaduan mahasiswa.</p>
+        </div>
+    </div>
+
+    @if (TempData["Sukses"] is string sukses)
+    {
+        <div class="sc-alert-sukses">@sukses</div>
+    }
+
+    <!-- Statistik Cepat -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="sc-card text-center py-3">
+                <div style="font-size:1.8rem; font-weight:700; color:#5C3D2E;">@Model.JumlahTotal</div>
+                <div style="font-size:.8rem; color:#80685B;">Total</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="sc-card text-center py-3">
+                <div style="font-size:1.8rem; font-weight:700; color:#856404;">@Model.JumlahMenunggu</div>
+                <div style="font-size:.8rem; color:#80685B;">Menunggu</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="sc-card text-center py-3">
+                <div style="font-size:1.8rem; font-weight:700; color:#004085;">@Model.JumlahDiproses</div>
+                <div style="font-size:.8rem; color:#80685B;">Diproses</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="sc-card text-center py-3">
+                <div style="font-size:1.8rem; font-weight:700; color:#155724;">@Model.JumlahSelesai</div>
+                <div style="font-size:.8rem; color:#80685B;">Selesai</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Status -->
+    <form method="get" class="d-flex align-items-center gap-2 mb-3">
+        <label for="status" class="form-label mb-0 fw-semibold" style="color:#5C3D2E;">Filter Status</label>
+        <select id="status" name="status" class="form-select" style="max-width: 260px;" onchange="this.form.submit()">
+            <option value="">Semua status</option>
+            @foreach (var s in Enum.GetValues<StatusLaporan>())
+            {
+                <option value="@s" selected="@(Model.FilterStatus == s)">@s.Label()</option>
+            }
+        </select>
+        @if (Model.FilterStatus.HasValue)
+        {
+            <a href="@Url.Action("Index")" class="btn btn-sm btn-sc-outline">Reset</a>
+        }
+    </form>
+
+    <!-- Daftar Pengaduan -->
+    @if (!Model.Items.Any())
+    {
+        <div class="sc-card sc-kosong">
+            <p>Tidak ada pengaduan dengan filter ini.</p>
+        </div>
+    }
+    else
+    {
+        foreach (var item in Model.Items)
+        {
+            <a asp-action="Detail" asp-route-id="@item.IdPengaduan" class="sc-item">
+                <div>
+                    <div class="sc-item-judul">
+                        #@item.IdPengaduan &middot; @item.NamaKategori
+                    </div>
+                    <div class="sc-item-meta">
+                        👤 @item.NamaPelapor
+                        &middot; 📍 @item.LokasiKejadian
+                        &middot; 🕐 @item.TanggalPengaduan.ToString("dd MMM yyyy, HH:mm")
+                    </div>
+                </div>
+                <span class="@item.Status.CssClass()">@item.Status.Label()</span>
+            </a>
+        }
+
+        @if (Model.TotalHalaman > 1)
+        {
+            <nav aria-label="Halaman">
+                <ul class="pagination justify-content-center mt-4">
+                    @for (var i = 1; i <= Model.TotalHalaman; i++)
+                    {
+                        <li class="page-item @(i == Model.Halaman ? "active" : "")">
+                            <a class="page-link" asp-action="Index"
+                               asp-route-halaman="@i"
+                               asp-route-status="@Model.FilterStatus">@i</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        }
+    }
+</div>

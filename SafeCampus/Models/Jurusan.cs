@@ -1,16 +1,17 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SafeCampus.Models
+namespace SafeCampus.Models;
+
+[Table("jurusan")]
+public class Jurusan
 {
-    public class Jurusan
-    {
-        [Key]
-        public int Id { get; set; }
+    [Key, Column("id_jurusan")]
+    public int Id { get; set; }
 
-        [Required]
-        public string NamaJurusan { get; set; }
+    [Column("nama_jurusan"), MaxLength(100), Required]
+    public string NamaJurusan { get; set; } = string.Empty;
 
-        // Relasi agar satu Fakultas bisa memiliki banyak User
-        public ICollection<User> Users { get; set; }
-    }
+    // Navigasi balik
+    public List<User> Users { get; set; } = new();
 }

@@ -1,45 +1,83 @@
-﻿@model SafeCampus.Models.LoginViewModel
+@model SafeCampus.Models.LoginViewModel
 @{
     ViewData["Title"] = "Login";
+    Layout = null; // Halaman login pakai layout sendiri (tanpa navbar)
 }
-
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - SafeCampus</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body { background-color: #FFF8F0; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+        .brand { font-size: 2rem; font-weight: 700; color: #5C3D2E; }
+        .sub   { color: #80685B; font-size: .95rem; }
+        .card-custom { border-radius: 18px; border: 1px solid #E9DCD1; }
+        .btn-aksen   { background: #F28C28; color: white; border: none; }
+        .btn-aksen:hover { background: #E76F51; color: white; }
+        .link-custom { color: #F28C28; font-weight: 600; text-decoration: none; }
+        .link-custom:hover { color: #E76F51; }
+        .text-primer { color: #5C3D2E; }
+    </style>
+</head>
+<body>
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-5">
 
+            <div class="text-center mb-4">
+                <div class="brand">🛡️ SafeCampus</div>
+                <div class="sub">Sistem Laporan Pengaduan Kampus</div>
+            </div>
+
             @if (TempData["SuccessMessage"] != null)
             {
-                <div class="alert alert-success text-center" style="background-color: #FFD6A5; color: #5C3D2E; border: none;">
+                <div class="alert text-center" style="background:#D4EDDA; color:#155724; border-radius:12px; border:none;">
                     @TempData["SuccessMessage"]
                 </div>
             }
 
-            <!-- Perhatikan penggunaan class card-custom di sini -->
-            <div class="card card-custom shadow-lg">
+            <div class="card card-custom shadow-sm">
                 <div class="card-body p-4">
-                    <!-- Perhatikan penggunaan class text-primer di sini -->
                     <h3 class="text-center mb-4 text-primer fw-bold">Masuk</h3>
+
                     <form asp-action="Login" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2" style="font-size:.88rem; display:@(ViewData.ModelState.ErrorCount > 0 ? "block" : "none")"></div>
+
                         <div class="mb-3">
-                            <label asp-for="Username" class="form-label fw-semibold">Username</label>
-                            <input asp-for="Username" class="form-control" placeholder="Masukkan username Anda" />
-                            <span asp-validation-for="Username" class="text-danger"></span>
+                            <label asp-for="Username" class="form-label fw-semibold"></label>
+                            <input asp-for="Username" class="form-control"
+                                   placeholder="Masukkan NPM (mahasiswa) atau 'admin'" />
+                            <span asp-validation-for="Username" class="text-danger" style="font-size:.85rem"></span>
+                            <div class="form-text">Mahasiswa: gunakan NPM. Admin: gunakan username admin.</div>
                         </div>
+
                         <div class="mb-4">
-                            <label asp-for="Password" class="form-label fw-semibold">Password</label>
-                            <input asp-for="Password" class="form-control" type="password" placeholder="Masukkan password" />
-                            <span asp-validation-for="Password" class="text-danger"></span>
+                            <label asp-for="Password" class="form-label fw-semibold"></label>
+                            <input asp-for="Password" class="form-control" type="password"
+                                   placeholder="Masukkan password" />
+                            <span asp-validation-for="Password" class="text-danger" style="font-size:.85rem"></span>
                         </div>
-                        <!-- Perhatikan penggunaan class btn-aksen di sini -->
-                        <button type="submit" class="btn btn-aksen w-100 py-2">Login</button>
+
+                        <button type="submit" class="btn btn-aksen w-100 py-2 fw-bold">Masuk</button>
+
                         <div class="text-center mt-4">
-                            <!-- Perhatikan penggunaan class link-custom di sini -->
-                            Belum punya akun? <a asp-controller="Account" asp-action="Register" class="link-custom">Daftar sekarang</a>
+                            Belum punya akun?
+                            <a asp-controller="Account" asp-action="Register" class="link-custom">Daftar sekarang</a>
                         </div>
                     </form>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+</body>
+</html>

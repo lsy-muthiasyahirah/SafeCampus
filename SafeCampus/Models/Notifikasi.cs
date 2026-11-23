@@ -1,25 +1,32 @@
-﻿
-using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
-namespace SafeCampus.Models
+namespace SafeCampus.Models;
+
+[Table("notifikasi")]
+public class Notifikasi
 {
-    public class Notifikasi
-    {
-        [Key]
-        public int IdNotifikasi { get; set; }
+    [Key, Column("id_notifikasi")]
+    public int IdNotifikasi { get; set; }
 
-        public int IdUser { get; set; }
+    [Column("id_user")]
+    public int IdUser { get; set; }
 
-        public int IdPengaduan { get; set; }
+    [ForeignKey(nameof(IdUser))]
+    public User? User { get; set; }
 
-        public string Pesan { get; set; } = "";
+    [Column("id_pengaduan")]
+    public int IdPengaduan { get; set; }
 
-        public DateTime TanggalNotifikasi { get; set; }
-            = DateTime.Now;
+    [ForeignKey(nameof(IdPengaduan))]
+    public Pengaduan? Pengaduan { get; set; }
 
-        public bool SudahDibaca { get; set; } = false;
+    [Column("pesan", TypeName = "text")]
+    public string Pesan { get; set; } = string.Empty;
 
-        public Pengaduan? Pengaduan { get; set; }
-    }
+    [Column("tanggal_notifikasi")]
+    public DateTime TanggalNotifikasi { get; set; } = DateTime.Now;
+
+    [Column("sudah_dibaca")]
+    public bool SudahDibaca { get; set; } = false;
 }
